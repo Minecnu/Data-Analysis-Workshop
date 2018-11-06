@@ -1,0 +1,550 @@
+红酒数据探索
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# 加载你最终使用的所有组件
+# 在这个代码块的分析中。
+
+# 注意，在这个代码块中，将参数 "echo" 设为假。
+# This prevents the code from displaying in the knitted HTML output.这可以避免代码混入 HTML 输出显示。
+# 应当在文件中，对所有代码块设为 echo=FALSE 。
+#install.packages("ggplot2")
+Sys.setlocale('LC_ALL','C')
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+library(GGally)
+library(scales)
+library(memisc)
+```
+# 加载数据
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+# 加载数据
+getwd()
+wq= read.csv("wineQualityReds.csv")
+```
+
+# 单变量分析
+## 你的数据集结构是什么？
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+names(wq)
+str(wq)
+```
+
+## quality的分布情况
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x = quality),data = wq)+
+  geom_histogram()
+```
+
+注释:评分范围为3-8分，为5-6居多。比较符合正态分布。
+***
+
+
+
+## 修改free sulfur dioxide 与 total sulfur dioxide的单位（mg/dm^3转化为g/dm^3）
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq$total.sulfur.dioxide = wq$total.sulfur.dioxide/1000
+wq$free.sulfur.dioxide = wq$free.sulfur.dioxide/1000
+```
+
+## 看各种配方分布情况—直方图
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+p1 = ggplot(aes(x = fixed.acidity),data = wq)+
+  geom_histogram()
+p2 = ggplot(aes(x = volatile.acidity),data = wq)+
+  geom_histogram()
+p3 = ggplot(aes(x = citric.acid),data = wq)+
+  geom_histogram()
+p4 = ggplot(aes(x = residual.sugar),data = wq)+
+  geom_histogram()
+p5 = ggplot(aes(x = chlorides),data = wq)+
+  geom_histogram()
+p6 = ggplot(aes(x = free.sulfur.dioxide),data = wq)+
+  geom_histogram()
+p7 = ggplot(aes(x = total.sulfur.dioxide),data = wq)+
+  geom_histogram()
+p8 = ggplot(aes(x = density),data = wq)+
+  geom_histogram()
+p9 = ggplot(aes(x = pH),data = wq)+
+  geom_histogram()
+p10 = ggplot(aes(x = sulphates),data = wq)+
+  geom_histogram()
+p11 = ggplot(aes(x = alcohol),data = wq)+
+  geom_histogram()
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,ncol = 4)
+```
+
+## 看各种配方分布情况—箱线图
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+p1 = ggplot(aes(y = fixed.acidity),data = wq)+
+  geom_boxplot()
+p2 = ggplot(aes(y = volatile.acidity),data = wq)+
+  geom_boxplot()
+p3 = ggplot(aes(y = citric.acid),data = wq)+
+  geom_boxplot()
+p4 = ggplot(aes(y = residual.sugar),data = wq)+
+  geom_boxplot()
+p5 = ggplot(aes(y = chlorides),data = wq)+
+  geom_boxplot()
+p6 = ggplot(aes(y = free.sulfur.dioxide),data = wq)+
+  geom_boxplot()
+p7 = ggplot(aes(y = total.sulfur.dioxide),data = wq)+
+  geom_boxplot()
+p8 = ggplot(aes(y = density),data = wq)+
+  geom_boxplot()
+p9 = ggplot(aes(y = pH),data = wq)+
+  geom_boxplot()
+p10 = ggplot(aes(y = sulphates),data = wq)+
+  geom_boxplot()
+p11 = ggplot(aes(y = alcohol),data = wq)+
+  geom_boxplot()
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,ncol = 4)
+```
+
+（1）fixed.acidity,residual.sugar,alcohol含量较高；residual.sugar的分布比较密集。  
+
+（2）volatile.acidity,citric.acid，chlorides,free.sulfur.dioxide,total.sulfur.dioxide,sulphates的含量均不高。PH值大概在3.0-3.5之间；chlorides分布比较密集，citric.acid分布比较宽。  
+
+（3）将重点关注fixed.acidity,residual.sugar，alcohol，citric.acid，chlorides对红酒评分的影响.
+
+***
+
+## 含量较高的fixed.acidity的分布情况
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+summary(wq$fixed.acidity)
+## fixed.acidity的平均值与中位数
+fixed.acidity.mean = mean(wq$fixed.acidity)
+fixed.acidity.median = median(wq$fixed.acidity)
+ggplot(aes(x = fixed.acidity),data = wq)+
+  geom_freqpoly()+
+  scale_x_continuous(breaks = seq(4,16,0.5),limits = c(4,16) )
+```
+
+fixed.acidity含量使用最多的是7.0g / dm^3左右，4g / dm^3到7g / dm^3的fixed.acidity使用呈现上升趋势，7g / dm^3以上的fixed.acidity使用整体呈现下降趋势
+
+***
+
+## residual.sugar的分布情况
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+summary(wq$residual.sugar)
+residual.sugar.mean = mean(wq$residual.sugar)
+residual.sugar.median = median(wq$residual.sugar)
+ggplot(aes(x = residual.sugar),data = wq)+
+  geom_freqpoly()+
+  scale_x_continuous(breaks = seq(0.5,5,0.2),limits = c(0,5) )
+  
+```
+
+residual.sugar含量使用最多的2.1g / dm^3左右，在0.5-2.1g / dm^3的使用上升趋势中存在一个明显的低谷，为1.9g / dm^3,含量大于2.1g / dm^3后使用量逐渐降低。
+
+***
+
+## alcohol的分布情况
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+summary(wq$alcohol)
+ggplot(aes(x = alcohol),data = wq)+
+  geom_freqpoly()+
+  scale_x_continuous(breaks = seq(8,15,0.5),limits = c(8,15))
+```
+
+alcohol 最常使用的含量为9.25% by volume左右，超过9.25% by volume后使用情况越来越少。
+
+***
+
+## citric.acid的分布情况
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+summary(wq$citric.acid)
+ggplot(aes(x = citric.acid),data = wq)+
+  geom_freqpoly()+
+  scale_x_continuous(breaks = seq(0,1,0.1),limits = c(0,1))
+```
+
+ citric.acid的范围在0-1g / dm^3之间， 含量整体呈现下降趋势，普遍偏向使用含量较低的citric.acid.
+
+***
+
+##chlorides的分布情况
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+summary(wq$chlorides)
+ggplot(aes(x = chlorides),data = wq)+
+  geom_freqpoly()
+```
+ 
+ chlorides 大多使用0.1g / dm^3
+ 
+ ***
+
+
+## 总结
+
+### 你的数据集内感兴趣的主要特性有哪些？
+
+* 主要探索哪种化学成分影响红葡萄酒的质量
+
+* 感兴趣的特征：含量较高的fixed.acidity,residual.sugar,alcohol；以及含量较低的chlorides和citric.acid 
+
+### 你认为数据集内哪些其他特征可以帮助你探索兴趣特点？
+
+* 含量较高的成分可能对红酒的影响比较大
+
+### 根据数据集内已有变量，你是否创建了任何新变量？
+
+* 暂时没有
+
+### 在已经探究的特性中，是否存在任何异常分布？你是否对数据进行一些操作，如清洁、调整或改变数据的形式？如果是，你为什么会这样做？
+
+* 将free sulfur dioxide和total sulfur dioxide的单位进行了修改。
+
+
+# 双变量绘图选择
+
+## 拷贝quality列至quality_factor 并将其转换为factor
+```{r}
+wq$quality_factor =as.factor(wq$quality)
+table(wq$quality_facor)
+str(wq)
+```
+
+## 各变量与quality的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+p1 = ggplot(aes(x = quality_factor,y = fixed.acidity),data = wq)+
+  geom_boxplot()
+p2 = ggplot(aes(x =quality_factor ,y = residual.sugar),data = wq)+
+  geom_boxplot()
+p3 = ggplot(aes(x = quality_factor,y =alcohol ),data = wq)+
+  geom_boxplot()
+
+p4 = ggplot(aes(x = quality_factor ,y =citric.acid ),data = wq)+
+  geom_boxplot()
+p5 = ggplot(aes(x = quality_factor ,y =chlorides ),data = wq)+
+  geom_boxplot()
+
+
+grid.arrange(p1,p2,p3,p4,p5,ncol = 3)
+```
+
+ residual.sugar和chlorides的箱线图比较窄，存在较多异常值
+ 
+ ***
+
+## quality 与fixed.acidity的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq.fa_by_q <-wq %>%
+  group_by(quality)%>%
+  summarise(fixed_acidity_mean = mean(fixed.acidity),
+            fixed_acidity_median = median(fixed.acidity),
+            n=n())%>%
+  arrange(quality)
+
+head(wq.fa_by_q)
+
+ggplot(aes(x= quality,y = fixed.acidity),data = wq)+
+  geom_line(stat = 'summary',fun.y = mean,linetype = 2,color = 'blue')+
+  geom_line(stat = 'summary',fun.y = median)+
+  coord_cartesian(ylim = c(5,10))+
+  geom_text(data=wq,aes(x=3,y=8.2,label='平均值'))+
+  geom_text(data=wq,aes(x=3,y=7.5,label='中位数'))
+```
+
+* 蓝色虚线表示平均数，黑色线表示中位数
+
+* quality 分数低于4分时，随着分数的增加fixed.acidity的平均含量减小，当quality大于4小于7时，fixed.acidity的平均含量会提高，当quality大于7时，fixed.acidity的平均含量会下降。
+
+* 猜测：低于4分为一个红酒等级，fixed.acidity的含量相对较低，大于4分小于7分为一个红酒等级，fixed.acidity含量会增加，大于7分为另一个红酒等级，fixed.acidity含量会减少。
+
+***
+
+## quality 与residual.sugar的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq.rs_by_q <-wq %>%
+  group_by(quality)%>%
+  summarise(residual_sugar_mean = mean(residual.sugar),
+            residual_sugar_median = median(residual.sugar),
+            n=n())%>%
+  arrange(quality)
+
+head(wq.rs_by_q)
+
+ggplot(aes(x= quality,y = residual.sugar),data = wq)+
+  coord_cartesian(xlim = c(3,8),ylim = c(2,3))+
+  geom_line(stat = 'summary',fun.y = mean,linetype = 2,color = 'blue')+
+  geom_line(stat = 'summary',fun.y = median)+
+  scale_x_continuous(breaks = seq(3,8,1))+
+  geom_text(data=wq,aes(x=3,y=2.6,label='平均值'))+
+  geom_text(data=wq,aes(x=3,y=2.1,label='中位数'))
+```
+
+* 蓝色虚线为平均值，黑线为中位数，由于residual.sugar异常值比较多，使用中位数衡量更好，quality分数大于4分小于7分时，residual.sugar的含量呈现上升趋势。大于7分residual.sugar的含量呈现下降趋势。
+
+* 猜测:3-4分的红酒residual.sugar含量不高，比较稳定，4-7分随着含量的增加分数也会增加，大于8分时含量会减少。
+
+***
+
+## quality 与alcohol的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq.al_by_q <-wq %>%
+  group_by(quality)%>%
+  summarise(alcohol_mean = mean(alcohol),
+            alcohol_median = median(alcohol),
+            n=n())%>%
+  arrange(quality)
+
+head(wq.al_by_q)
+
+ggplot(aes(x= quality,y = alcohol),data = wq)+
+  geom_line(stat = 'summary',fun.y = mean,linetype = 2,color = 'blue')+
+  geom_line(stat = 'summary',fun.y = median)+
+  geom_text(data=wq,aes(x=4,y=10.3,label='平均值'))+
+  geom_text(data=wq,aes(x=4,y=9.8,label='中位数'))
+```
+
+ 蓝色虚线表示平均值，当分数大于5时越高，分数越高，酒精的含量会越高。
+ 
+ ***
+
+## quality 与citric.acid的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq.ca_by_q <-wq %>%
+  group_by(quality)%>%
+  summarise(citric.acid_mean = mean(citric.acid),
+            citric.acid_median = median(citric.acid),
+            n=n())%>%
+  arrange(quality)
+
+head(wq.ca_by_q)
+
+ggplot(aes(x= quality,y = citric.acid),data = wq)+
+  geom_line(stat = 'summary',fun.y = mean,linetype = 2,color = 'blue')+
+  geom_line(stat = 'summary',fun.y = median)+
+  geom_text(data=wq,aes(x=3,y=0.15,label='平均值'))+
+  geom_text(data=wq,aes(x=3,y=0.05,label='中位数'))
+```
+
+蓝色虚线代表平均值，citric.acid的含量越高，quality得分越高
+
+***
+
+## quality 与chlorides的关系
+```{r  echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq.ch_by_q <-wq %>%
+  group_by(quality)%>%
+  summarise(chlorides_mean = mean(chlorides),
+            chlorides_median = median(chlorides),
+            n=n())%>%
+  arrange(quality)
+
+head(wq.ch_by_q)
+
+ggplot(aes(x= quality,y = chlorides),data = wq)+
+  geom_line(stat = 'summary',fun.y = mean,linetype = 2,color = 'blue')+
+  geom_line(stat = 'summary',fun.y = median)+
+  geom_text(data=wq,aes(x=3.2,y=0.12,label='平均值'))+
+  geom_text(data=wq,aes(x=3,y=0.085,label='中位数'))
+```
+
+蓝色虚线代表平均值，chlorides的含量越低，quality得分越高
+***
+
+## quality与density的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x= quality,y = density),data = wq)+
+  coord_cartesian(xlim = c(3,8),ylim = c(0.9,1))+
+  geom_line(stat = 'summary',fun.y = mean,linetype = 2,color = 'blue')+
+  geom_line(stat = 'summary',fun.y = median)
+```
+
+density都很高，接近1
+
+***
+
+## fixed acidity与volatile acidity的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x= fixed.acidity,y = volatile.acidity),data = wq)+
+  geom_point(position = position_jitter(h=0),color = 'orange')+
+   geom_smooth()
+```
+
+感觉没什么关系
+
+***
+
+## 相关性分析-相关性矩阵
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq_sample <-wq[c('fixed.acidity','citric.acid','residual.sugar','chlorides','density','sulphates','alcohol','quality')]
+ggpairs(wq_sample, 
+        lower = list(continuous = wrap("points", shape = I('.'))), 
+        upper = list(combo = wrap("box", outlier.shape = I('.'))))
+```
+
+（1）fixed.acidity 与citric.acid 弱正相关（相关系数0.63）；fixed.acidity与density弱正相关（0.67）；alcohol与density弱负相关（-0.50）；quality与alcohol弱正相关（0.48）
+
+***
+
+# 双变量分析
+
+### 探讨你在这部分探究中观察到的一些关系。这些感兴趣的特性与数据集内其他特性有什么区别？
+
+* 我关注的fixed acidity，residual sugar，alcohol都是含量比较高的特性；
+
+### 你是否观察到主要特性与其他特性之间的有趣关系？
+
+* 从探索中可以发现，红酒的等级可以划分为3-4分为一个等级，5-7分为一个等级，8分为一个等级。
+
+### 你发现最强的关系是什么？
+
+* 最强的关系是fixed.acidity与density的相关性，相关系数为0.67
+
+***
+
+
+# 多变量绘图选择
+
+##  从上面的分析中，可以将红酒的等级分为3级:3-5为次等（L）,6-7为中等（M）,8以上为高等（H）
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+wq$quality_cut[which(wq$quality ==5 | wq$quality ==6|wq$quality ==7)]<- "M"
+wq$quality_cut[which(wq$quality ==8 )]<- "H"
+wq$quality_cut[which(wq$quality ==3 | wq$quality ==4)]<- "L"
+table(wq$quality_cut)
+wq_x <- data.frame(x=c('H','L','M'),y = c(18,63,1518))
+```
+
+可以发现M中等酒的占比最多
+
+***
+
+## 探索下相关比较高的成分与quality的关系
+
+## 1.density VS alcohol VS quality
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x = alcohol, y = density, color =quality_cut), data = wq) +
+geom_jitter(alpha = 0.2) +
+#scale_color_brewer(palette = "Blues") +
+geom_smooth(method = "lm", se = FALSE,size=1) +
+ylim(0.985, 1.005) +
+labs(y = 'Density',x = 'Alcohol') 
+```
+
+* alchol与density为负相关，alcohol的含量越高,density就越低，在高品质红酒（H）中这种相关性更明显，相关性更大。H与L中这种相关性差别不大。
+
+***
+
+## 2.fixed.acidity VS citric.acid VS quality
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x = fixed.acidity, y = citric.acid, color =quality_cut), data = wq) +
+geom_jitter(alpha = 0.2) +
+#scale_color_brewer(palette = "Blues") +
+geom_smooth(method = "lm", se = FALSE,size=1) +
+#ylim(0.985, 1.005) +
+labs(y = 'citric.acid',x = 'fixed.acidity') 
+```
+
+* fixed.acidity与citric.acid为正相关，fixed.acidity的含量越高，citric.acid的含量越高，高等H的citric.acid含量偏高，低等L的citric.acid含量偏低
+
+***
+
+## 3.fixed.acidity VS density VS quality
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x = fixed.acidity, y = density, color =quality_cut), data = wq) +
+geom_jitter(alpha = 0.2) +
+#scale_color_brewer(palette = "Blues") +
+geom_smooth(method = "lm", se = FALSE,size=1) +
+#ylim(0.985, 1.005) +
+labs(y = 'density',x = 'fixed.acidity') 
+```
+
+* fixed.acidity与density为弱正相关，高等H的dentisy整体偏低，中等M与低等L的dentisy较为接近
+
+
+***
+
+# 多变量分析
+
+###  探讨你在这部分探究中观察到的一些关系。通过观察感兴趣的特性，是否存在相互促进的特性？
+
+* 
+
+### 这些特性之间是否存在有趣或惊人的联系呢？
+
+* alchol与density的相关性比较高，各类红酒（H,M,L）的差别不大。
+
+* fixed.acidity与citric.acid为正相关，同时高等H的citric.acid含量偏高，低等L的citric.acid含量偏低
+
+* fixed.acidity与density为弱正相关，高等H的dentisy整体偏低，中等M与低等L的dentisy较为接近
+
+### 选项：你是否创建过数据集的任何模型？讨论你模型的优缺点。
+
+* 未创建
+
+------
+
+# 定稿图与总结
+
+### 绘图一：quality 与fixed.acidity的关系
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x= quality,y = fixed.acidity),data = wq)+
+  geom_line(stat = 'summary',fun.y = mean,linetype = 2,color = 'blue')+
+  geom_line(stat = 'summary',fun.y = median,linetype = 1,color = 'red')+
+  coord_cartesian(ylim = c(5,10))+
+  geom_text(data=wq,aes(x=3,y=8.2,label='平均值'))+
+  geom_text(data=wq,aes(x=3,y=7.5,label='中位数'))+
+  xlab("红酒得分quality")+
+  ylab("fixed.acidity的含量(g / dm^3)")+
+  ggtitle("quality VS fixed.acidity")
+```
+
+### 描述一
+
+*  quality 分数低于4分时，随着分数的增加，fixed.acidity的平均含量减小；当quality大于4小于7时，fixed.acidity的平均含量会提高；当quality大于7时，fixed.acidity的平均含量会下降。
+
+*  猜测：低于4分为一个红酒等级，fixed.acidity的含量相对较低，大于4分小于7分为一个红酒等级，fixed.acidity含量会增加，大于7分为另一个红酒等级，fixed.acidity含量会减少。
+
+***
+
+### 绘图二：fixed.acidity VS citric.acid VS quality
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x = fixed.acidity, y = citric.acid, color =quality_cut), data = wq) +
+  geom_jitter(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE,size=1) +
+  labs(y = 'citric.acid(g / dm^3)',x = 'fixed.acidity(g / dm^3)')+
+  ggtitle("fixed.acidity VS citric.acid VS quality")
+  
+```
+
+### 描述二
+
+*fixed.acidity与citric.acid为正相关，fixed.acidity的含量越高，citric.acid的含量越高;
+
+*高等(H)红酒的citric.acid含量偏高，低等(L)红酒的citric.acid含量偏低 
+
+***
+
+### 绘图三：fixed.acidity VS density VS quality
+```{r echo=FALSE,warning= FALSE,comment=NA,message=FALSE}
+ggplot(aes(x = fixed.acidity, y = density, color =quality_cut), data = wq) +
+  geom_jitter(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE,size=1) +
+  labs(y = 'density(g / cm^3)',x = 'fixed.acidity(g / dm^3)') +
+  ggtitle("fixed.acidity VS density VS quality")
+```
+
+### 描述三
+
+* fixed.acidity与density为弱正相关，fixed.acidity的含量越高，density的含量越高，从趋势线上看，高等(H)红酒的相关度更高
+* 高等(H)红酒的dentisy含量整体偏低，中等(M)红酒与低等(L)红酒的dentisy较为接近。
+
+------
+
+# 反思
+
+* 这次的项目我主要想解决的问题是：不同红酒得分中红酒的成分含量有什么不同？
+
+* 在本次项目中我遇到的第一个问题是我不是很清楚这些红酒的成分究竟是什么，哪些是重要成分，哪些成分只是“打酱油”的，所以我根据前面的分析选取了几个比较感兴趣的成分，含量很高的alchol,fixed.acidity以及residual.sugar；含量较低的成分主要研究citric.acid与chlorides；density与PH相对比较稳定，所以没有单独研究。但后面在做相关性分析时发现了density与fixed.acidity的相关性比较高，所以在多变量研究时对此进行了分析。
+
+* 第二个难点就是打分等级是在3-8分之间，但是其实3-8分是一个比较广的范围，不适合作为分析中的红酒分类，如何找到合适的分类方式比较重要，我通过观察几个重要成分的分布，然后将红酒分为了3个等级，并在多变量分析中进行了应用。
+
+* 最终我得出根据我所划分的等级，高等(H)红酒citric.acid含量偏高，density含量偏低；中等(M)红酒的成分含量都处于中等水平，低等(L)红酒citric.acid含量偏低，density含量偏高。
+
+* 这次分析主要从相关性的角度出发探索了数据，研究不同红酒成分的分布情况，我认为这次的探索还有很多不足之处，比如这些红酒成分是否存在联系，是否可以建立某种模型。
+
+***
